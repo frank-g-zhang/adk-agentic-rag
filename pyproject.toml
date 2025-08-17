@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "law-rag-agent"
+version = "1.0.0"
+description = "本地法律RAG系统 - 基于中国法律条文"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "google-adk",
+    "sentence-transformers>=2.7.0",
+    "faiss-cpu>=1.12.0",
+    "litellm>=1.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+law-rag = "agentic_rag.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agentic_rag*"]
+
+[tool.setuptools.package-data]
+"agentic_rag" = ["*.yaml", "*.txt", "*.md"]

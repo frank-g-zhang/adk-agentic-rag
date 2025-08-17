@@ -1,0 +1,12 @@
+# 本地RAG系统依赖
+sentence-transformers==2.2.2
+faiss-cpu==1.7.4
+litellm==1.0.0
+python-dotenv==1.0.0
+
+# ADK依赖
+google-adk
+
+# 工具类
+numpy==1.24.3
+pickle5==0.0.12
