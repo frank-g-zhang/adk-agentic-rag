@@ -7,7 +7,7 @@ from typing import Optional
 from google.adk.agents.callback_context import CallbackContext
 from .config import LawRAGConfig
 from .local_retriever import LocalRetriever
-from .workflow_agent import agentic_rag_workflow
+from .optimized_workflow_agent import optimized_agentic_rag_workflow
 
 # 全局配置
 config = LawRAGConfig()
@@ -30,8 +30,8 @@ def setup_agent(callback_context: CallbackContext) -> None:
     else:
         callback_context.state["index_ready"] = f"已加载 {len(retriever.texts)} 条法律条文，启用SequentialAgent工作流"
 
-# 使用SequentialAgent工作流
-root_agent = agentic_rag_workflow
+# 使用优化的4阶段SequentialAgent工作流
+root_agent = optimized_agentic_rag_workflow
 
 # 导出供ADK使用
 __all__ = ['root_agent']
