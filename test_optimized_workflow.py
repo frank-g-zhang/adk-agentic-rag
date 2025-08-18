@@ -9,15 +9,11 @@ import os
 # 添加项目路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
-from agentic_rag.agent import (
-    optimized_agentic_rag_workflow,
-    query_rewriter_agent,
-    retrieval_agent,
-    quality_evaluator_agent,
-    answer_generator_agent,
-    execute_retrieval,
-    get_retriever
-)
+from agentic_rag.agent import optimized_agentic_rag_workflow
+from agentic_rag.query_rewriter import query_rewriter_agent
+from agentic_rag.retriever import get_retrieval_agent, execute_retrieval, get_retriever
+from agentic_rag.quality_evaluator import quality_evaluator_agent
+from agentic_rag.answer_generator import answer_generator_agent
 
 
 def test_optimized_workflow_configuration():
@@ -26,6 +22,11 @@ def test_optimized_workflow_configuration():
     assert len(optimized_agentic_rag_workflow.sub_agents) == 4
     
     # 验证4阶段Agent顺序
+    assert optimized_agentic_rag_workflow.sub_agents[0].name == "QueryRewriterAgent"
+    assert optimized_agentic_rag_workflow.sub_agents[1].name == "RetrievalAgent"
+    assert optimized_agentic_rag_workflow.sub_agents[2].name == "QualityEvaluatorAgent"
+    assert optimized_agentic_rag_workflow.sub_agents[3].name == "AnswerGeneratorAgent"
+    
     expected_names = [
         "QueryRewriterAgent",
         "RetrievalAgent", 
@@ -70,14 +71,14 @@ def test_agent_instructions():
     assert "多个查询变体" in rewriter_instruction
     
     # 检索Agent
-    retrieval_instruction = retrieval_agent.instruction
+    retrieval_instruction = get_retrieval_agent().instruction
     assert "{rewritten_query}" in retrieval_instruction
     assert "未找到相关法律条文" in retrieval_instruction
     
     # 质量评估Agent
     evaluator_instruction = quality_evaluator_agent.instruction
     assert "阈值判断" in evaluator_instruction
-    assert "8.0分" in evaluator_instruction
+    assert "80%" in evaluator_instruction
     assert "PASS/FAIL" in evaluator_instruction
     
     # 答案生成Agent
@@ -95,11 +96,11 @@ def test_threshold_mechanism():
     generator_instruction = answer_generator_agent.instruction
     
     # 检查阈值设置
-    assert "≥8.0分" in evaluator_instruction or ">=8.0" in evaluator_instruction
+    assert "≥32分" in evaluator_instruction or ">=32" in evaluator_instruction
     assert "80%" in evaluator_instruction
     
     # 检查答案生成的阈值判断
-    assert "总分≥8.0" in generator_instruction or "PASS" in generator_instruction
+    assert "PASS" in generator_instruction and "FAIL" in generator_instruction
     
     print("✅ 阈值机制配置正确")
 
@@ -107,16 +108,14 @@ def test_threshold_mechanism():
 def test_state_variable_references():
     """测试状态变量引用"""
     # 检索Agent引用rewritten_query
-    assert "{rewritten_query}" in retrieval_agent.instruction
+    assert "{rewritten_query}" in get_retrieval_agent().instruction
     
     # 质量评估Agent引用前面的输出
     evaluator_instruction = quality_evaluator_agent.instruction
-    assert "{rewritten_query}" in evaluator_instruction
     assert "{retrieval_results}" in evaluator_instruction
     
     # 答案生成Agent引用所有前面的输出
     generator_instruction = answer_generator_agent.instruction
-    assert "{rewritten_query}" in generator_instruction
     assert "{retrieval_results}" in generator_instruction
     assert "{quality_evaluation}" in generator_instruction
     

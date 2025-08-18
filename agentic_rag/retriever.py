@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""
-Local RAG implementation with BGE-M3, FAISS, and Cross-encoder
-Removes all Google Cloud dependencies
-"""
+"""检索器和检索Agent - 基于BGE-M3和Cross-Encoder的法律条文检索"""
 
 import os
 import json
-import numpy as np
-import faiss
-from typing import List, Dict, Any, Optional
-from sentence_transformers import SentenceTransformer
-from sentence_transformers.cross_encoder import CrossEncoder
-import pickle
 import warnings
 from pathlib import Path
+from typing import List, Dict, Any, Optional
+import numpy as np
+from sentence_transformers import SentenceTransformer, CrossEncoder
+import faiss
+import pickle
 
 
 class LocalRetriever:
@@ -160,7 +156,7 @@ class LocalRetriever:
         return results
     
     def rerank(self, query: str, documents: List[Dict[str, Any]], top_n: int = 5) -> List[Dict[str, Any]]:
-        """使用cross-encoder重排序"""
+        """检索器和检索Agent - 基于BGE-M3和Cross-Encoder的法律条文检索"""
         if not documents:
             return []
         
@@ -227,3 +223,92 @@ def create_local_retriever() -> LocalRetriever:
                 retriever.add_documents(texts, metadatas)
     
     return retriever
+
+
+# 全局检索器
+retriever: Optional[LocalRetriever] = None
+
+
+def get_retriever():
+    """获取全局检索器实例"""
+    global retriever
+    if retriever is None:
+        retriever = create_local_retriever()
+    return retriever
+
+
+def execute_retrieval(query: str) -> str:
+    """执行检索并返回格式化结果"""
+    retriever = get_retriever()
+    if retriever.index is None:
+        return "⚠️ 法律文本索引尚未建立，请先运行: python init_index.py"
+    
+    # 执行检索和重排序
+    results = retriever.retrieve_and_rerank(query, top_k=10, top_n=5)
+    
+    if not results:
+        return "未找到相关法律条文"
+    
+    # 格式化检索结果
+    formatted_results = []
+    for i, result in enumerate(results, 1):
+        text = result['text']
+        score = result.get('rerank_score', 0)
+        metadata = result['metadata']
+        
+        law_name = metadata.get('law', '未知法律')
+        article = metadata.get('article', '未知条款')
+        
+        formatted_results.append(f"""【检索结果 {i}】(相关性: {score:.3f})
+{law_name} {article}
+{text}""")
+    
+    return "\n\n".join(formatted_results)
+
+
+# 检索执行Agent - 延迟导入避免循环依赖
+def create_retrieval_agent():
+    """创建检索执行Agent"""
+    from google.adk.agents import LlmAgent
+    from google.adk.models.lite_llm import LiteLlm
+    from google.genai import types
+    
+    return LlmAgent(
+        name="RetrievalAgent", 
+        model=LiteLlm(model="deepseek/deepseek-chat"),
+        instruction="""你是检索执行专家。基于重写后的查询执行法律条文检索。
+
+**重写后的查询：**
+{rewritten_query}
+
+**执行步骤：**
+1. 解析重写后的查询内容
+2. 使用主查询进行检索
+3. 如果结果不足，尝试备选查询
+4. 合并和去重检索结果
+5. 按相关性排序
+
+**重要规则：**
+- 如果检索工具返回"未找到相关法律条文"，直接输出该结果
+- 不要基于空结果生成任何内容
+
+输出检索到的法律条文和统计信息。""",
+        description="执行法律条文检索",
+        output_key="retrieval_results",
+        tools=[execute_retrieval],
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.1,
+            top_p=0.8,
+            max_output_tokens=2048,
+        )
+    )
+
+# 懒加载检索Agent
+retrieval_agent = None
+
+def get_retrieval_agent():
+    """获取检索Agent实例"""
+    global retrieval_agent
+    if retrieval_agent is None:
+        retrieval_agent = create_retrieval_agent()
+    return retrieval_agent

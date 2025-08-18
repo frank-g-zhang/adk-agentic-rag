@@ -13,7 +13,7 @@ import time
 # 添加项目路径
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.local_retriever import LocalRetriever
+from app.retriever import LocalRetriever
 
 def init_law_index():
     """初始化法律文本索引"""

@@ -5,7 +5,7 @@ ADK Web兼容的法律RAG系统
 
 from google.adk.agents import Agent
 from google.adk.tools import Tool
-from app.local_retriever import create_local_retriever
+from app.retriever import create_local_retriever
 
 # 初始化检索器
 retriever = create_local_retriever()

@@ -11,7 +11,7 @@ from unittest.mock import patch, MagicMock
 # 添加项目路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.local_retriever import LocalRetriever
+from app.retriever import LocalRetriever
 
 
 class TestLocalRetriever:
