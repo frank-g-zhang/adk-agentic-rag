@@ -9,7 +9,7 @@ import os
 # 添加项目路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 
-from agentic_rag.optimized_workflow_agent import (
+from agentic_rag.agent import (
     optimized_agentic_rag_workflow,
     query_rewriter_agent,
     retrieval_agent,
