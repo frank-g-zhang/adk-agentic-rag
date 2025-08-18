@@ -95,18 +95,18 @@ class ConditionalWorkflowAgent(BaseAgent):
         quality_passed = False
         
         try:
-            # 解析总分 - 查找 "总分：[X]/40分" 或 "总分：[X]/40分 (百分比: [X]%)"
-            score_pattern = r'总分：(\d+)/40分'
+            # 优先解析总分 - 查找 "总分：[X]/40分" 或 "总分：X/40分"
+            score_pattern = r'总分：\[?(\d+)\]?/40分'
             score_match = re.search(score_pattern, evaluation_text)
             if score_match:
                 quality_score = int(score_match.group(1))
-            
-            # 解析百分比 - 查找 "(百分比: [X]%)"
-            percentage_pattern = r'\(百分比:\s*(\d+)%\)'
-            percentage_match = re.search(percentage_pattern, evaluation_text)
-            if percentage_match:
-                percentage = int(percentage_match.group(1))
-                quality_score = percentage  # 使用百分比作为分数
+            else:
+                # 如果没有找到总分，才使用百分比 - 查找 "(百分比: X.X%)" 支持小数
+                percentage_pattern = r'\(百分比:\s*(\d+(?:\.\d+)?)%\)'
+                percentage_match = re.search(percentage_pattern, evaluation_text)
+                if percentage_match:
+                    percentage = float(percentage_match.group(1))
+                    quality_score = int(percentage)  # 转换为整数分数
             
             # 解析判断结果 - 查找 "判断结果：[PASS]" 或 "判断结果：PASS"
             result_pattern = r'判断结果：\[?(PASS|FAIL)\]?'
@@ -186,10 +186,9 @@ class ConditionalWorkflowAgent(BaseAgent):
                     logger.debug(f"[{self.name}] 答案生成事件: {event.model_dump_json(indent=2, exclude_none=True)}")
                     yield event
                 
-                # 确保有最终答案
-                final_answer = ctx.session.state.get("answer", "")
+                # 确保有最终答案 - answer_generator的output_key是"final_answer"
+                final_answer = ctx.session.state.get("final_answer", "")
                 if final_answer:
-                    ctx.session.state["final_answer"] = final_answer
                     logger.info(f"[{self.name}] 直接路径完成，生成最终答案")
                 else:
                     ctx.session.state["final_answer"] = "抱歉，无法生成满意的答案。"
