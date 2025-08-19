@@ -1,45 +1,62 @@
 """互联网搜索Agent - 当本地检索质量不达标时进行网络补充搜索"""
 
+import os
 from google.adk.agents import LlmAgent
 from google.adk.models.lite_llm import LiteLlm
 from google.genai import types
+
+# 加载环境变量
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def web_search_tool(query: str, max_results: int = 5) -> str:
     """执行互联网搜索并返回格式化结果"""
     try:
-        # 这里可以集成真实的搜索API，如Google Search API, Bing API等
-        # 目前返回模拟结果
+        from serpapi import GoogleSearch
         
-        # 模拟搜索结果
-        mock_results = [
-            {
-                "title": f"法律咨询：{query}相关案例",
-                "snippet": f"根据相关法律规定，关于{query}的问题需要考虑具体情况...",
-                "url": "https://example-law-site.com/case1"
-            },
-            {
-                "title": f"{query}的法律解释和适用",
-                "snippet": f"在司法实践中，{query}通常按照以下原则处理...",
-                "url": "https://example-law-site.com/interpretation"
-            },
-            {
-                "title": f"最新司法解释：{query}相关规定",
-                "snippet": f"最高人民法院关于{query}的最新司法解释指出...",
-                "url": "https://example-court.gov.cn/interpretation"
-            }
-        ]
+        # 获取API密钥
+        api_key = os.getenv('SERPAPI_API_KEY')
+        if not api_key:
+            return "错误：未设置SERPAPI_API_KEY环境变量"
+        
+        # 配置搜索参数 - 基于SerpAPI文档样例
+        params = {
+            "engine": "google_light",
+            "q": query,
+            "location": "China",  # 可选：搜索地理位置
+            "google_domain": "google.com",
+            "hl": "zh-cn",  # 界面语言：中文
+            "gl": "cn",     # 搜索地区：中国
+            "api_key": api_key
+        }
+        
+        # 执行搜索
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        
+        # 解析搜索结果
+        organic_results = results.get("organic_results", [])
+        
+        if not organic_results:
+            return "未找到相关搜索结果"
         
         # 格式化搜索结果
         formatted_results = []
-        for i, result in enumerate(mock_results[:max_results], 1):
+        for i, result in enumerate(organic_results[:max_results], 1):
+            title = result.get('title', '无标题')
+            snippet = result.get('snippet', '无摘要')
+            link = result.get('link', '无链接')
+            
             formatted_results.append(f"""【网络搜索结果 {i}】
-标题：{result['title']}
-内容：{result['snippet']}
-来源：{result['url']}""")
+标题：{title}
+内容：{snippet}
+来源：{link}""")
         
         return "\n\n".join(formatted_results)
         
+    except ImportError:
+        return "错误：请安装serpapi库 (pip install google-search-results)"
     except Exception as e:
         return f"网络搜索失败：{str(e)}"
 
@@ -74,6 +91,12 @@ web_search_agent = LlmAgent(
 - 优先获取官方解释
 - 补充实务案例
 
+**重要限制：**
+- 严格基于web_search_tool的实际搜索结果进行分析
+- 如果搜索工具返回"未找到相关搜索结果"或错误信息，必须如实报告
+- 禁止在无搜索结果时编造或推测任何法律信息
+- 禁止基于训练数据生成法律建议，必须依据实际搜索结果
+
 **输出格式：**
 ## 网络搜索补充
 
@@ -83,7 +106,21 @@ web_search_agent = LlmAgent(
 **搜索结果：**
 [调用web_search_tool获取的结果]
 
-**补充价值：**
+**如果搜索无结果，必须输出：**
+## 网络搜索补充
+
+**搜索关键词：**
+[优化后的搜索关键词]
+
+**搜索结果：**
+互联网查询无结果信息。未能通过网络搜索获取到相关的法律信息补充。
+
+**建议：**
+- 尝试调整搜索关键词
+- 建议咨询专业法律人士
+- 查阅权威法律数据库
+
+**有搜索结果时的补充价值：**
 - 补充了哪些本地检索缺失的信息
 - 提供了哪些最新的法律动态
 - 增加了哪些实务操作指导""",
