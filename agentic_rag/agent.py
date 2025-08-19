@@ -19,7 +19,7 @@ from .query_rewriter import query_rewriter_agent
 from .retriever import get_retrieval_agent
 from .quality_evaluator import quality_evaluator_agent
 from .answer_generator import answer_generator_agent
-from .web_search_agent import web_search_agent
+from .web_search import web_search_agent
 
 # 配置日志
 logger = logging.getLogger(__name__)

@@ -169,7 +169,7 @@ class TestConditionalWorkflowIntegration:
         from agentic_rag.retriever import get_retrieval_agent
         from agentic_rag.quality_evaluator import quality_evaluator_agent
         from agentic_rag.answer_generator import answer_generator_agent
-        from agentic_rag.web_search_agent import web_search_agent
+        from agentic_rag.web_search import web_search_agent
         
         # 验证所有Agent都可以正常导入和访问
         agent = conditional_workflow_agent

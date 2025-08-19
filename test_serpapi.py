@@ -10,7 +10,7 @@ sys.path.append(str(Path(__file__).parent))
 from dotenv import load_dotenv
 load_dotenv()
 
-from agentic_rag.web_search_agent import web_search_tool
+from agentic_rag.web_search import web_search_tool
 
 def test_serpapi_integration():
     """测试SerpAPI集成"""
