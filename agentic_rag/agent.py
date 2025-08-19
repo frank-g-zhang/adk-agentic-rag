@@ -233,10 +233,16 @@ class ConditionalWorkflowAgent(BaseAgent):
             ctx.session.state["final_answer"] = error_message
             logger.error(f"[{self.name}] 工作流执行出错: {str(e)}", exc_info=True)
             
-            # 生成错误事件
-            from google.adk.events import TextEvent
-            error_event = TextEvent(text=error_message)
-            yield error_event
+            # 生成错误事件 - 使用兼容的事件类型
+            try:
+                from google.adk.events import TextEvent
+                error_event = TextEvent(text=error_message)
+                yield error_event
+            except ImportError:
+                # 如果TextEvent不可用，使用其他事件类型
+                from google.adk.events import Event
+                error_event = Event(type="text", data={"text": error_message})
+                yield error_event
 
 
 # 创建条件工作流实例
