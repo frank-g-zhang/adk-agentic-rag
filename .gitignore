@@ -56,3 +56,6 @@ logs/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Test files
+test_*.py
