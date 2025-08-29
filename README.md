@@ -173,14 +173,11 @@ python download_models.py
 python init_index.py
 ```
 
-### 4. 运行测试
+### 4. ADK Web部署
 
 ```bash
-# 测试工作流
-python test_optimized_workflow.py
-
-# 本地运行
-python main.py
+# 在agentic_rag目录下执行
+adk web
 ```
 
 ## 🔧 配置说明
@@ -260,27 +257,6 @@ params = {
 - 无搜索结果时明确返回"未找到相关信息"
 - 避免生成虚假或不准确的法律建议
 
-## 🧪 测试验证
-
-系统包含完整的测试套件：
-
-```bash
-# 条件分支工作流测试
-python test_conditional_workflow.py
-
-# 多路径检索测试
-python test_multi_search.py
-
-# SerpAPI集成测试
-python test_serpapi.py
-
-# 质量评估解析测试
-python test_parse_quality.py
-
-# Agent检索功能测试
-python test_agent_retrieval.py
-```
-
 ### 测试覆盖范围
 - ✅ **工作流集成测试**: 完整的条件分支工作流验证
 - ✅ **检索功能测试**: 多路径检索、RRF融合、Cross-Encoder重排序
@@ -318,10 +294,17 @@ from agentic_rag import agent
    python init_index.py
    ```
 
-3. **ADK Web部署**
-   - 通过ADK Web界面选择项目目录
-   - 系统自动识别agent导出
-   - 启动Web服务进行法律咨询
+3. **ADK Web启动**
+   ```bash
+   # 在agentic_rag目录下执行
+   cd agentic_rag
+   adk web
+   ```
+
+4. **Web界面访问**
+   - 启动后访问 `http://localhost:8000` (默认端口)
+   - 在Web界面中可以直接进行法律咨询对话
+   - 系统会自动加载智能条件分支工作流
 
 ## 📈 性能特点
 
